@@ -3,21 +3,23 @@ import re
 import socket
 
 
-def send_magic(mac_address: bytes, addr: tuple[str, int]):
+def send_magic(mac_address: str, addr: tuple[str, int]):
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-
-    magic = b"\xff" * 6 + mac_address * 16
-    s.sendto(magic, (addr[0], addr[1]))
+    s.sendto(magic_from(mac_address), (addr[0], addr[1]))
 
 
-def is_valid_mac(mac: str):
-    # simpler
-    # return bool(re.match(r"([0-9a-f]{2}[:-]?){5}[0-9a-f]{2}$", mac.lower()))
+# for testing
+def magic_from(mac_address: str) -> bytes:
+    m = bytes.fromhex(mac_address.replace(":", "").replace("-", ""))
+    return b"\xff" * 6 + m * 16
 
-    # more consistent match
+
+def is_valid_mac(mac: str) -> bool:
     return bool(
-        re.match(r"[0-9a-f]{2}([:-]?)[0-9a-f]{2}(\1[0-9a-f]{2}){4}$", mac.lower())
+        re.match(
+            r"[0-9a-f]{2}([:-]?)[0-9a-f]{2}(\1[0-9a-f]{2}){4}$", mac.lower()
+        )
     )
 
 
@@ -25,7 +27,9 @@ if __name__ == "__main__":
     import argparse
     import sys
 
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description="Wake up devices with magic packet."
+    )
     parser.add_argument(
         "-i",
         metavar="IP",
@@ -45,7 +49,4 @@ if __name__ == "__main__":
         if not is_valid_mac(m):
             print(f"invalid mac address: {m}")
             sys.exit(1)
-        send_magic(bytes.fromhex(m.replace(":", "").replace("-", "")), (args.i, args.p))
-
-    # macs = [m for m in args.MAC if is_valid_mac(m)]
-    # print(macs)
+        send_magic(m, (args.i, args.p))
