@@ -11,12 +11,11 @@
 #define MAGIC_PACKET_LEN 102
 
 regex_t VALID_MAC_RE;
-char *MAC_REGEX = "^([0-9a-f]{2}[:-]?){5}[0-9a-f]{2}$";
 
 void usage(char *prog) {
   fprintf(stderr,
           "Usage: %s [-i IP] [-p PORT] MAC...\n"
-          "  -i IP      broadcast IP address (default: 255.255.255.255)\n"
+          "  -i IP      broadcast address (default: 255.255.255.255)\n"
           "  -p PORT    destination port (default: 40000)\n",
           prog);
 }
@@ -31,11 +30,12 @@ char *get_regerror(int errcode, regex_t *compiled) {
 int is_valid_mac(char *mac) { return regexec(&VALID_MAC_RE, mac, 0, NULL, 0); }
 
 // assumes mac is valid, see is_valid_mac()
-unsigned char *hex_mac_to_char(char *mac) {
+unsigned char *hex_mac_to_bytes(char *mac) {
   unsigned char *bytes = malloc(6 * sizeof(unsigned char));
-  char tmp[2];
+  char tmp[3]; // we need only 2 but strtol expects null terminated char*
+  tmp[2] = '\0';
 
-  for (int i, bindex = 0; bindex < 6;) {
+  for (int i = 0, bindex = 0; bindex < 6;) {
     if (mac[i] == ':' || mac[i] == '-') {
       i++;
     } else {
@@ -53,13 +53,14 @@ int send_magic_packet(int sock, char *mac_hex, struct sockaddr_in *addr) {
   static unsigned char magic_packet[MAGIC_PACKET_LEN];
   memset(&magic_packet, 0xff, 6 * sizeof(unsigned char));
 
-  unsigned char *mac_bytes = hex_mac_to_char(mac_hex);
+  unsigned char *mac_bytes = hex_mac_to_bytes(mac_hex);
 
   unsigned char *tmp = magic_packet;
   for (unsigned int i = 0; i < 16; i++) {
     tmp = tmp + 6 * sizeof(unsigned char);
     memcpy(tmp, mac_bytes, 6);
   }
+  free(mac_bytes);
 
   // FIXME bind doesnt work
   //  return send(sock, &magic_packet, MAGIC_PACKET_LEN, 0);
@@ -68,7 +69,8 @@ int send_magic_packet(int sock, char *mac_hex, struct sockaddr_in *addr) {
 }
 
 int main(int argc, char *argv[]) {
-  int err = regcomp(&VALID_MAC_RE, MAC_REGEX, REG_EXTENDED | REG_ICASE);
+  char *mac_regex = "^([0-9a-f]{2}[:-]?){5}[0-9a-f]{2}$";
+  int err = regcomp(&VALID_MAC_RE, mac_regex, REG_EXTENDED | REG_ICASE);
   if (err) {
     fprintf(stderr, "Regex compilation failed: %s\n",
             get_regerror(err, &VALID_MAC_RE));
@@ -116,7 +118,7 @@ int main(int argc, char *argv[]) {
   int broadcast = 1;
   if (setsockopt(sock, SOL_SOCKET, SO_BROADCAST, &broadcast,
                  sizeof(broadcast))) {
-    perror("failed to set broadcast option");
+    perror("Failed to set broadcast option");
     exit(1);
   }
   // if (bind(sock, (struct sockaddr *)&addr, sizeof(addr))) {
@@ -127,7 +129,7 @@ int main(int argc, char *argv[]) {
   for (int i = optind; i < argc; i++) {
     int err = is_valid_mac(argv[i]);
     if (err != 0) {
-      fprintf(stderr, "%s: invalid MAC address %s\n", argv[i],
+      fprintf(stderr, "Invalid MAC address: %s: %s\n", argv[i],
               get_regerror(err, &VALID_MAC_RE));
       exit(1);
     }
