@@ -49,7 +49,7 @@ unsigned char *hex_mac_to_bytes(char *mac) {
   return bytes;
 }
 
-int send_magic_packet(int sock, char *mac_hex, struct sockaddr_in *addr) {
+int send_magic_packet(int sock, char *mac_hex) {
   static unsigned char magic_packet[MAGIC_PACKET_LEN];
   memset(&magic_packet, 0xff, 6 * sizeof(unsigned char));
 
@@ -62,10 +62,7 @@ int send_magic_packet(int sock, char *mac_hex, struct sockaddr_in *addr) {
   }
   free(mac_bytes);
 
-  // FIXME bind doesnt work
-  //  return send(sock, &magic_packet, MAGIC_PACKET_LEN, 0);
-  return sendto(sock, &magic_packet, MAGIC_PACKET_LEN, 0,
-                (struct sockaddr *)addr, sizeof(*addr));
+  return send(sock, &magic_packet, MAGIC_PACKET_LEN, 0);
 }
 
 int main(int argc, char *argv[]) {
@@ -121,10 +118,10 @@ int main(int argc, char *argv[]) {
     perror("Failed to set broadcast option");
     exit(1);
   }
-  // if (bind(sock, (struct sockaddr *)&addr, sizeof(addr))) {
-  //   perror("Socket binding error");
-  //   exit(1);
-  // }
+  if (connect(sock, (struct sockaddr *)&addr, sizeof(addr))) {
+    perror("Error setting default socket destination");
+    exit(1);
+  }
 
   for (int i = optind; i < argc; i++) {
     int err = is_valid_mac(argv[i]);
@@ -134,7 +131,7 @@ int main(int argc, char *argv[]) {
       exit(1);
     }
 
-    int n = send_magic_packet(sock, argv[i], &addr);
+    int n = send_magic_packet(sock, argv[i]);
     if (n < 0) {
       perror("Failed to send magic packet");
       exit(1);
