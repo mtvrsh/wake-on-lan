@@ -6,7 +6,7 @@ import socket
 def send_magic(mac_address: str, addr: tuple[str, int]):
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-    s.sendto(magic_from(mac_address), (addr[0], addr[1]))
+    s.sendto(magic_from(mac_address), addr)
 
 
 # for testing
@@ -47,6 +47,6 @@ if __name__ == "__main__":
 
     for m in args.MAC:
         if not is_valid_mac(m):
-            print(f"invalid mac address: {m}")
+            print(f"invalid mac address: {m}", file=sys.stderr)
             sys.exit(1)
         send_magic(m, (args.i, args.p))
