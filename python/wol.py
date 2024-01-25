@@ -48,5 +48,5 @@ if __name__ == "__main__":
     for m in args.MAC:
         if not is_valid_mac(m):
             print(f"invalid mac address: {m}", file=sys.stderr)
-            sys.exit(1)
+            continue
         send_magic(m, (args.i, args.p))
