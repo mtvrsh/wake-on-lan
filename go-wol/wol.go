@@ -1,33 +1,12 @@
 package main
 
 import (
-	"bytes"
 	"flag"
 	"fmt"
 	"io"
 	"net"
 	"os"
 )
-
-// sendMagic expects valid MAC address, see net.ParseMAC
-func sendMagic(dest io.Writer, mac net.HardwareAddr) error {
-	const pktLen = 102
-	buf := make([]byte, 0, pktLen)
-	magicPacket := bytes.NewBuffer(buf)
-	for i := 0; i < 6; i++ {
-		magicPacket.WriteByte(0xff)
-	}
-	for i := 6; i < pktLen; {
-		magicPacket.Write(mac)
-		i = i + 6
-	}
-	_, err := dest.Write(magicPacket.Bytes())
-	return err
-}
-
-func printErr(err error) {
-	fmt.Fprintf(os.Stderr, "error: %v\n", err)
-}
 
 func main() {
 	flag.Usage = func() {
@@ -69,4 +48,21 @@ func main() {
 	if err := conn.Close(); err != nil {
 		printErr(err)
 	}
+}
+
+// sendMagic expects valid MAC address, see net.ParseMAC.
+func sendMagic(dest io.Writer, mac net.HardwareAddr) error {
+	packet := make([]byte, 6, 102)
+	for i := 0; i < 6; i++ {
+		packet[i] = 0xff
+	}
+	for i := 0; i < 16; i++ {
+		packet = append(packet, mac...)
+	}
+	_, err := dest.Write(packet)
+	return err
+}
+
+func printErr(err error) {
+	fmt.Fprintf(os.Stderr, "error: %v\n", err)
 }

@@ -28,9 +28,9 @@ test_wol "c"
 after_1s c/build/wol -i $BRD $MAC &
 test_wol "c subnet" "-i $BRD"
 
-after_1s go/wol $MAC &
+after_1s go-wol/go-wol $MAC &
 test_wol "go"
-after_1s go/wol -i $BRD $MAC &
+after_1s go-wol/go-wol -i $BRD $MAC &
 test_wol "go subnet" "-i $BRD"
 
 after_1s python/wol.py $MAC &
