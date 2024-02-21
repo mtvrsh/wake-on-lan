@@ -1,9 +1,9 @@
-use std::{net::UdpSocket, process::exit};
+use std::{net::UdpSocket, process::ExitCode, time::Duration};
 
 use clap::{arg, command, value_parser};
 use mac_address::MacAddress;
 
-fn main() {
+fn main() -> ExitCode {
     let args = command!()
         .arg(
             arg!(-i --ipaddr <ADDRESS> "broadcast address")
@@ -28,20 +28,18 @@ fn main() {
     let socket = match UdpSocket::bind("0.0.0.0:0") {
         Ok(s) => s,
         Err(e) => {
-            eprintln!("failed to bind socket to 0.0.0.0: {e}");
-            exit(1);
+            eprintln!("error: failed to bind socket to \"0.0.0.0\": {e}");
+            return ExitCode::FAILURE;
         }
     };
-    socket
-        .set_write_timeout(Some(std::time::Duration::new(5, 0)))
-        .ok();
+    socket.set_write_timeout(Some(Duration::new(5, 0))).ok();
     if let Err(e) = socket.set_broadcast(true) {
-        eprintln!("failed to set SO_BROADCAST: {e}");
-        exit(1);
+        eprintln!("error: failed to set SO_BROADCAST: {e}");
+        return ExitCode::FAILURE;
     }
     if let Err(e) = socket.connect(format!("{addr}:{port}")) {
-        eprintln!("failed to connect socket to \"{addr}:{port}\": {e}");
-        exit(1);
+        eprintln!("error: failed to connect socket to \"{addr}:{port}\": {e}");
+        return ExitCode::FAILURE;
     }
 
     let macs: Vec<&String> = args
@@ -53,18 +51,22 @@ fn main() {
         let m = match mac.parse::<MacAddress>() {
             Ok(m) => m,
             Err(e) => {
-                eprintln!("\"{mac}\" is not valid MAC address: {e}");
+                eprintln!("error: \"{mac}\" is not valid MAC address: {e}");
                 continue;
             }
         };
         match send_magic(&socket, m.bytes()) {
             Ok(n) if n != 102 => {
-                eprintln!("sent {n} bytes, should be 102");
+                eprintln!("error: sent {n} bytes, should be 102");
             }
             Ok(_) => (),
-            Err(e) => eprintln!("send failed: {e}"),
+            Err(e) => {
+                eprintln!("error: send failed: {e}");
+                return ExitCode::FAILURE;
+            }
         }
     }
+    ExitCode::SUCCESS
 }
 
 fn send_magic(socket: &UdpSocket, mac: [u8; 6]) -> Result<usize, std::io::Error> {
