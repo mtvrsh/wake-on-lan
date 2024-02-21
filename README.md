@@ -11,6 +11,12 @@ each written in different language and with identical functionality (wake up by 
 go install github.com/mtvrsh/wake-on-lan/go-wol@latest
 ```
 
+### Using cargo
+
+```sh
+cargo install --git https://github.com/mtvrsh/wake-on-lan
+```
+
 ### Prebuilt binary
 
-Download statically-linked binaries from [releases page](https://github.com/mtvrsh/wake-on-lan/releases).
+Download statically-linked binaries from [releases page](https://github.com/mtvrsh/wake-on-lan/releases) for Linux, Mac OS and Windows.
