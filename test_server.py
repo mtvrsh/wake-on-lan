@@ -19,7 +19,7 @@ if __name__ == "__main__":
     resp, ip = s.recvfrom(150)
     print(f"{len(resp)} bytes from {ip[0]}")
 
-    if len(resp) != 102:
+    if len(resp) != wol._packet_len:
         print(f"bad packet length: {len(resp)}")
         sys.exit(1)
 

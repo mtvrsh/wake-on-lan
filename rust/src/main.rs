@@ -57,7 +57,8 @@ fn main() -> ExitCode {
         };
         match send_magic(&socket, m.bytes()) {
             Ok(n) if n != 102 => {
-                eprintln!("error: sent {n} bytes, should be 102");
+                eprintln!("error: sent {n} of 102 bytes");
+                return ExitCode::FAILURE;
             }
             Ok(_) => (),
             Err(e) => {

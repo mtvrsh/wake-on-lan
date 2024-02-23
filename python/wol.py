@@ -2,6 +2,8 @@
 import re
 import socket
 
+_packet_len = 102
+
 
 def send_magic(mac_address: str, addr="255.255.255.255", port=40000):
     WakeOnLan(addr, port).send_magic(mac_address)
@@ -28,7 +30,7 @@ class WakeOnLan:
 
     def send_magic(self, mac_address: str):
         n = self._socket.send(magic_from(mac_address))
-        if n != 102:
+        if n != _packet_len:
             raise RuntimeError("sent only part of magic packet")
 
 

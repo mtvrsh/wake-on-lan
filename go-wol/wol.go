@@ -8,6 +8,8 @@ import (
 	"os"
 )
 
+const packetLen = 102
+
 func main() {
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: %s [-i IP] [-p PORT] MAC-ADDRESS...\n", os.Args[0])
@@ -39,8 +41,13 @@ func main() {
 			printErr(err)
 			continue
 		}
-		if err := sendMagic(conn, mac); err != nil {
+		n, err := sendMagic(conn, mac)
+		if err != nil {
 			printErr(err)
+			os.Exit(1)
+		}
+		if n != packetLen {
+			printErr(fmt.Errorf("sent %v of %v bytes", n, packetLen))
 			os.Exit(1)
 		}
 	}
@@ -51,16 +58,15 @@ func main() {
 }
 
 // sendMagic expects valid MAC address, see net.ParseMAC.
-func sendMagic(dest io.Writer, mac net.HardwareAddr) error {
-	packet := make([]byte, 6, 102)
+func sendMagic(dest io.Writer, mac net.HardwareAddr) (int, error) {
+	packet := make([]byte, 6, packetLen)
 	for i := 0; i < 6; i++ {
 		packet[i] = 0xff
 	}
 	for i := 0; i < 16; i++ {
 		packet = append(packet, mac...)
 	}
-	_, err := dest.Write(packet)
-	return err
+	return dest.Write(packet)
 }
 
 func printErr(err error) {

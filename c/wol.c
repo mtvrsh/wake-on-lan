@@ -133,11 +133,12 @@ int main(int argc, char *argv[]) {
 
     int n = send_magic_packet(sock, argv[i]);
     if (n < 0) {
-      perror("Failed to send magic packet");
+      perror("failed to send magic packet");
       exit(EXIT_FAILURE);
     }
     if (n != MAGIC_PACKET_LEN) {
-      fprintf(stderr, "WARNING: sent magic packet with wrong size (%d)\n", n);
+      fprintf(stderr, "sent %d of %d bytes\n", n, MAGIC_PACKET_LEN);
+      exit(EXIT_FAILURE);
     }
   }
   close(sock);
