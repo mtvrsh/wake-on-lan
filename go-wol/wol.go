@@ -6,6 +6,7 @@ import (
 	"io"
 	"net"
 	"os"
+	"time"
 )
 
 const packetLen = 102
@@ -24,12 +25,8 @@ func main() {
 		os.Exit(2)
 	}
 
-	addr, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%s", *address, *port))
-	if err != nil {
-		printErr(err)
-		os.Exit(1)
-	}
-	conn, err := net.DialUDP("udp", nil, addr)
+	addr := net.JoinHostPort(*address, *port)
+	conn, err := net.DialTimeout("udp", addr, time.Second*5)
 	if err != nil {
 		printErr(err)
 		os.Exit(1)

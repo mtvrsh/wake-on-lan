@@ -26,6 +26,7 @@ class WakeOnLan:
     def __init__(self, addr: str, port: int):
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        self._socket.settimeout(5)
         self._socket.connect((addr, port))
 
     def send_magic(self, mac_address: str):

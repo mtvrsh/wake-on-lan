@@ -11,9 +11,9 @@ if __name__ == "__main__":
     parser.add_argument("MAC")
     args = parser.parse_args()
 
-    socket.setdefaulttimeout(5)
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+    s.settimeout(5)
     s.bind((args.i, args.p))
 
     resp, ip = s.recvfrom(150)
