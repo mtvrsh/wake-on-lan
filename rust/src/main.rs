@@ -1,7 +1,7 @@
 use std::{net::UdpSocket, process::ExitCode, time::Duration};
 
 use clap::{arg, command, value_parser};
-use mac_address::MacAddress;
+use macaddr::MacAddr6;
 
 fn main() -> ExitCode {
     let args = command!()
@@ -48,14 +48,14 @@ fn main() -> ExitCode {
         .collect();
 
     for mac in macs {
-        let m = match mac.parse::<MacAddress>() {
+        let m = match mac.parse::<MacAddr6>() {
             Ok(m) => m,
             Err(e) => {
                 eprintln!("error: \"{mac}\" is not valid MAC address: {e}");
                 continue;
             }
         };
-        match send_magic(&socket, m.bytes()) {
+        match send_magic(&socket, m.into_array()) {
             Ok(n) if n != 102 => {
                 eprintln!("error: sent {n} of 102 bytes");
                 return ExitCode::FAILURE;
