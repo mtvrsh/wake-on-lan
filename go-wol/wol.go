@@ -59,6 +59,9 @@ func main() {
 
 // sendMagic expects valid MAC address, see net.ParseMAC.
 func sendMagic(dest io.Writer, mac net.HardwareAddr) (int, error) {
+	if len(mac) != 6 {
+		return 0, fmt.Errorf("unsupported MAC address format")
+	}
 	packet := make([]byte, 6, packetLen)
 	for i := 0; i < 6; i++ {
 		packet[i] = 0xff
