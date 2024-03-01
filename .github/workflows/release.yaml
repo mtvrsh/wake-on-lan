@@ -1,0 +1,89 @@
+name: Build relase binaries
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+defaults:
+  run:
+    working-directory: ./rust
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: "aarch64-unknown-linux-musl,x86_64-unknown-linux-musl"
+      - name: Install tools
+        run: sudo apt-get update && sudo apt-get install lld-15 -y
+      - name: Build
+        run: |
+          export CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER=lld-15
+          export CARGO_TARGET_X86_64_UNKNOWN_LINUX_MUSL_LINKER=lld-15
+          cargo build --locked --release --target aarch64-unknown-linux-musl
+          cargo build --locked --release --target x86_64-unknown-linux-musl
+      - name: Upload aarch64 binary
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file: rust/target/aarch64-unknown-linux-musl/release/wol
+          asset_name: wol-linux-aarch64
+      - name: Upload x86_64 binary
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file: rust/target/x86_64-unknown-linux-musl/release/wol
+          asset_name: wol-linux-x86_64
+
+  macos:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: "aarch64-apple-darwin,x86_64-apple-darwin"
+      - name: Build
+        run: |
+          cargo build --locked --release --target aarch64-apple-darwin
+          cargo build --locked --release --target x86_64-apple-darwin
+      - name: Upload aarch64 binary
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file: rust/target/aarch64-apple-darwin/release/wol
+          asset_name: wol-macos-aarch64
+      - name: Upload x86_64 binary
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file: rust/target/x86_64-apple-darwin/release/wol
+          asset_name: wol-macos-x86_64
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: "aarch64-pc-windows-msvc,x86_64-pc-windows-msvc"
+      - name: Build
+        run: |
+          cargo build --locked --release --target aarch64-pc-windows-msvc
+          cargo build --locked --release --target x86_64-pc-windows-msvc
+      - name: Upload aarch64 binary
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file: rust/target/aarch64-pc-windows-msvc/release/wol.exe
+          asset_name: wol-windows-aarch64.exe
+      - name: Upload x86_64 binary
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file: rust/target/x86_64-pc-windows-msvc/release/wol.exe
+          asset_name: wol-windows-x86_64.exe
