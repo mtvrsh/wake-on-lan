@@ -6,6 +6,7 @@ import (
 	"io"
 	"net"
 	"os"
+	"path/filepath"
 	"time"
 )
 
@@ -13,11 +14,11 @@ const packetLen = 102
 
 func main() {
 	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Usage: %s [-i IP] [-p PORT] MAC-ADDRESS...\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "Usage: %s [OPTIONS] MAC...\n", filepath.Base(os.Args[0]))
 		flag.PrintDefaults()
 	}
-	address := flag.String("i", "255.255.255.255", "broadcast `address`")
-	port := flag.String("p", "40000", "destination `port`")
+	address := flag.String("i", "255.255.255.255", "broadcast `addr`ess")
+	port := flag.String("p", "40000", "destination port `num`ber")
 	flag.Parse()
 
 	if flag.NArg() == 0 {

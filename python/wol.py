@@ -44,15 +44,15 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "-i",
-        metavar="IP",
+        metavar="ADDR",
         default="255.255.255.255",
         help="broadcast address (default: %(default)s)",
     )
     parser.add_argument(
         "-p",
-        metavar="PORT",
+        metavar="NUM",
         default=40000,
-        help="destination port (default: %(default)s)",
+        help="destination port number (default: %(default)s)",
     )
     parser.add_argument("MAC", nargs="+", help="address of device to wake")
     args = parser.parse_args()

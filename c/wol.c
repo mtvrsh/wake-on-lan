@@ -1,5 +1,6 @@
 #include <arpa/inet.h>
 #include <getopt.h>
+#include <libgen.h>
 #include <netinet/in.h>
 #include <regex.h>
 #include <stdio.h>
@@ -14,10 +15,10 @@ regex_t VALID_MAC_RE;
 
 void usage(char *prog) {
   fprintf(stderr,
-          "Usage: %s [-i IP] [-p PORT] MAC-ADDRESS...\n"
-          "  -i IP      broadcast address (default: 255.255.255.255)\n"
-          "  -p PORT    destination port (default: 40000)\n",
-          prog);
+          "Usage: %s [OPTIONS] MAC...\n"
+          "  -i ADDR    broadcast address (default: 255.255.255.255)\n"
+          "  -p NUM     destination port number (default: 40000)\n",
+          basename(prog));
 }
 
 char *get_regerror(int errcode, regex_t *compiled) {
