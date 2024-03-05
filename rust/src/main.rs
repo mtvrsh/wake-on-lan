@@ -1,29 +1,26 @@
 use std::{net::UdpSocket, process::ExitCode, time::Duration};
 
-use clap::{arg, command, value_parser};
+use clap::{command, Parser};
 use macaddr::MacAddr6;
 
-fn main() -> ExitCode {
-    let args = command!()
-        .arg(
-            arg!(-i --ipaddr <ADDRESS> "broadcast address")
-                .value_parser(value_parser!(String))
-                .default_value("255.255.255.255"),
-        )
-        .arg(
-            arg!(-p --port <NUM> "destination port")
-                .value_parser(value_parser!(u16))
-                .default_value("40000"),
-        )
-        .arg(arg!(<MAC> ... "MAC address"))
-        .get_matches();
+#[derive(Parser)]
+#[command(about, version)]
+struct Cli {
+    /// Broadcast address
+    #[arg(short, long, value_name = "ADDR", default_value = "255.255.255.255")]
+    ipaddr: String,
 
-    let port = args
-        .get_one::<u16>("port")
-        .expect("port should have some value");
-    let addr = args
-        .get_one::<String>("ipaddr")
-        .expect("ipaddr should have some value");
+    /// Destination port number
+    #[arg(short, long, value_name = "NUM", default_value = "40000")]
+    port: u16,
+
+    /// MAC address
+    #[arg(required = true)]
+    mac: Vec<String>,
+}
+
+fn main() -> ExitCode {
+    let args = Cli::parse();
 
     let socket = match UdpSocket::bind("0.0.0.0:0") {
         Ok(s) => s,
@@ -37,17 +34,15 @@ fn main() -> ExitCode {
         eprintln!("error: failed to set SO_BROADCAST: {e}");
         return ExitCode::FAILURE;
     }
-    if let Err(e) = socket.connect(format!("{addr}:{port}")) {
-        eprintln!("error: failed to connect socket to \"{addr}:{port}\": {e}");
+    if let Err(e) = socket.connect(format!("{}:{}", args.ipaddr, args.port)) {
+        eprintln!(
+            "error: failed to connect socket to \"{}:{}\": {e}",
+            args.ipaddr, args.port
+        );
         return ExitCode::FAILURE;
     }
 
-    let macs: Vec<&String> = args
-        .get_many("MAC")
-        .expect("MAC address argument not found")
-        .collect();
-
-    for mac in macs {
+    for mac in args.mac {
         let m = match mac.parse::<MacAddr6>() {
             Ok(m) => m,
             Err(e) => {
