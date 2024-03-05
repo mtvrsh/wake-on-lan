@@ -1,29 +1,26 @@
 use std::{net::UdpSocket, process::ExitCode, time::Duration};
 
-use clap::{arg, command, value_parser};
+use argh::FromArgs;
 use macaddr::MacAddr6;
 
-fn main() -> ExitCode {
-    let args = command!()
-        .arg(
-            arg!(-i --ipaddr <ADDRESS> "broadcast address")
-                .value_parser(value_parser!(String))
-                .default_value("255.255.255.255"),
-        )
-        .arg(
-            arg!(-p --port <NUM> "destination port")
-                .value_parser(value_parser!(u16))
-                .default_value("40000"),
-        )
-        .arg(arg!(<MAC> ... "MAC address"))
-        .get_matches();
+/// Cross platform wake on lan client.
+#[derive(FromArgs, Debug)]
+struct Cli {
+    /// broadcast address
+    #[argh(option, short = 'i', default = "String::from(\"255.255.255.255\")")]
+    addr: String,
 
-    let port = args
-        .get_one::<u16>("port")
-        .expect("port should have some value");
-    let addr = args
-        .get_one::<String>("ipaddr")
-        .expect("ipaddr should have some value");
+    /// destination port
+    #[argh(option, short = 'p', default = "40000")]
+    port: u16,
+
+    /// MAC addresses
+    #[argh(positional, greedy)]
+    mac: Vec<String>,
+}
+
+fn main() -> ExitCode {
+    let args: Cli = argh::from_env();
 
     let socket = match UdpSocket::bind("0.0.0.0:0") {
         Ok(s) => s,
@@ -37,17 +34,25 @@ fn main() -> ExitCode {
         eprintln!("error: failed to set SO_BROADCAST: {e}");
         return ExitCode::FAILURE;
     }
-    if let Err(e) = socket.connect(format!("{addr}:{port}")) {
-        eprintln!("error: failed to connect socket to \"{addr}:{port}\": {e}");
+    if let Err(e) = socket.connect(format!("{}:{}", args.addr, args.port)) {
+        eprintln!(
+            "error: failed to connect socket to \"{}:{}\": {e}",
+            args.addr, args.port
+        );
         return ExitCode::FAILURE;
     }
 
-    let macs: Vec<&String> = args
-        .get_many("MAC")
-        .expect("MAC address argument not found")
-        .collect();
+    if args.mac.is_empty() {
+        let cmd: Vec<String> = std::env::args().collect();
+        let cmd = std::path::Path::new(&cmd[0])
+            .file_name()
+            .and_then(|s| s.to_str())
+            .unwrap_or(cmd[0].as_str());
+        eprintln!("error: too few arguments, try `{cmd} --help`");
+        return ExitCode::FAILURE;
+    }
 
-    for mac in macs {
+    for mac in args.mac {
         let m = match mac.parse::<MacAddr6>() {
             Ok(m) => m,
             Err(e) => {
