@@ -4,7 +4,7 @@ MAC="af:e2:d2:40:5c:16"
 BRD="192.168.0.255"
 
 after_1s() {
-	sleep 1s
+	sleep 0.5s
 	"$@"
 }
 

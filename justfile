@@ -20,3 +20,6 @@ build-rust:
 
 clean-rust:
     cd rust && cargo clean
+
+test: build
+    ./test.py

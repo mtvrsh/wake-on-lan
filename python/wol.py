@@ -57,7 +57,7 @@ if __name__ == "__main__":
     parser.add_argument("MAC", nargs="+", help="address of device to wake")
     args = parser.parse_args()
 
-    wol = WakeOnLan(args.i, args.p)
+    wol = WakeOnLan(args.i, int(args.p))
 
     for m in args.MAC:
         if not is_valid_mac(m):
