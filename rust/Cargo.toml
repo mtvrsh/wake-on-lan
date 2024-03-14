@@ -21,5 +21,5 @@ pedantic = "deny"
 unwrap_used = "deny"
 
 [dependencies]
-argh = "0.1.12"
+argh = { git = "https://github.com/google/argh.git" }
 macaddr = "1"

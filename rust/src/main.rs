@@ -5,6 +5,7 @@ use macaddr::MacAddr6;
 
 /// Cross platform wake on lan client.
 #[derive(FromArgs, Debug)]
+#[argh(help_triggers("-h", "--help"))]
 struct Cli {
     /// broadcast address
     #[argh(option, short = 'i', default = "String::from(\"255.255.255.255\")")]
