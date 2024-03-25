@@ -1,7 +1,6 @@
-use std::{net::UdpSocket, process::ExitCode, time::Duration};
-
-use clap::{command, Parser};
+use clap::Parser;
 use macaddr::MacAddr6;
+use std::{net::UdpSocket, process::ExitCode, time::Duration};
 
 #[derive(Parser)]
 #[command(about, version)]
@@ -29,7 +28,7 @@ fn main() -> ExitCode {
             return ExitCode::FAILURE;
         }
     };
-    socket.set_write_timeout(Some(Duration::new(5, 0))).ok();
+    socket.set_write_timeout(Some(Duration::from_secs(5))).ok();
     if let Err(e) = socket.set_broadcast(true) {
         eprintln!("error: failed to set SO_BROADCAST: {e}");
         return ExitCode::FAILURE;
@@ -43,7 +42,7 @@ fn main() -> ExitCode {
     }
 
     for mac in args.mac {
-        let m = match mac.parse::<MacAddr6>() {
+        let m: MacAddr6 = match mac.parse() {
             Ok(m) => m,
             Err(e) => {
                 eprintln!("error: \"{mac}\" is not valid MAC address: {e}");
