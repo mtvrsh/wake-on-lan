@@ -18,7 +18,7 @@ func main() {
 		flag.PrintDefaults()
 	}
 	address := flag.String("i", "255.255.255.255", "broadcast `addr`ess")
-	port := flag.String("p", "40000", "destination port `num`ber")
+	port := flag.String("p", "9", "destination port `num`ber")
 	flag.Parse()
 
 	if flag.NArg() == 0 {

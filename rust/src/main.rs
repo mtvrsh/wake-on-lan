@@ -10,7 +10,7 @@ struct Cli {
     ipaddr: String,
 
     /// Destination port number
-    #[arg(short, long, value_name = "NUM", default_value = "40000")]
+    #[arg(short, long, value_name = "NUM", default_value = "9")]
     port: u16,
 
     /// MAC address

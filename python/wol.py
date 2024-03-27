@@ -5,7 +5,7 @@ import socket
 _packet_len = 102
 
 
-def send_magic(mac_address: str, addr="255.255.255.255", port=40000):
+def send_magic(mac_address: str, addr="255.255.255.255", port=9):
     WakeOnLan(addr, port).send_magic(mac_address)
 
 
@@ -51,7 +51,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "-p",
         metavar="NUM",
-        default=40000,
+        default=9,
         help="destination port number (default: %(default)s)",
     )
     parser.add_argument("MAC", nargs="+", help="address of device to wake")

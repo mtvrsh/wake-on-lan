@@ -17,7 +17,7 @@ void usage(char *prog) {
   fprintf(stderr,
           "Usage: %s [OPTIONS] MAC...\n"
           "  -i ADDR    broadcast address (default: 255.255.255.255)\n"
-          "  -p NUM     destination port number (default: 40000)\n",
+          "  -p NUM     destination port number (default: 9)\n",
           basename(prog));
 }
 
@@ -78,7 +78,7 @@ int main(int argc, char *argv[]) {
   struct sockaddr_in addr;
   addr.sin_family = AF_INET;
   addr.sin_addr.s_addr = INADDR_BROADCAST;
-  addr.sin_port = htons(40000);
+  addr.sin_port = htons(9);
 
   int opt, port;
   while ((opt = getopt(argc, argv, "i:p:h")) != -1)
