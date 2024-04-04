@@ -1,4 +1,5 @@
 #include <arpa/inet.h>
+#include <err.h>
 #include <getopt.h>
 #include <libgen.h>
 #include <netinet/in.h>
@@ -19,6 +20,7 @@ void usage(char *prog) {
           "  -i ADDR    broadcast address (default: 255.255.255.255)\n"
           "  -p NUM     destination port number (default: 9)\n",
           basename(prog));
+  exit(2);
 }
 
 char *get_regerror(int errcode, regex_t *compiled) {
@@ -32,7 +34,7 @@ int is_valid_mac(char *mac) { return regexec(&VALID_MAC_RE, mac, 0, NULL, 0); }
 
 // assumes mac is valid, see is_valid_mac()
 unsigned char *hex_mac_to_bytes(char *mac) {
-  unsigned char *bytes = malloc(6 * sizeof(unsigned char));
+  unsigned char *bytes = malloc(6 * sizeof(char));
   char tmp[3]; // we need only 2 but strtol expects null terminated char*
   tmp[2] = '\0';
 
@@ -68,11 +70,10 @@ int send_magic_packet(int sock, char *mac_hex) {
 
 int main(int argc, char *argv[]) {
   char *mac_regex = "^([0-9a-f]{2}[:-]?){5}[0-9a-f]{2}$";
-  int err = regcomp(&VALID_MAC_RE, mac_regex, REG_EXTENDED | REG_ICASE);
-  if (err) {
-    fprintf(stderr, "regex compilation failed: %s\n",
-            get_regerror(err, &VALID_MAC_RE));
-    exit(EXIT_FAILURE);
+  int errcode = regcomp(&VALID_MAC_RE, mac_regex, REG_EXTENDED | REG_ICASE);
+  if (errcode) {
+    err(EXIT_FAILURE, "regex compilation failed: %s",
+        get_regerror(errcode, &VALID_MAC_RE));
   }
 
   struct sockaddr_in addr;
@@ -84,62 +85,52 @@ int main(int argc, char *argv[]) {
   while ((opt = getopt(argc, argv, "i:p:h")) != -1)
     switch (opt) {
     case 'i':
-      err = inet_pton(AF_INET, optarg, &(addr.sin_addr.s_addr));
-      if (err != 1) {
-        fprintf(stderr, "invalid broadcast address: %s\n", optarg);
-        exit(EXIT_FAILURE);
+      if (inet_pton(AF_INET, optarg, &(addr.sin_addr.s_addr)) != 1) {
+        errx(EXIT_FAILURE, "invalid broadcast address: %s", optarg);
       }
       break;
     case 'p':
       port = strtol(optarg, NULL, 10);
-      if (port < 1 || port > 65535) {
-        fprintf(stderr, "invalid port: %s\n", optarg);
-        exit(EXIT_FAILURE);
+      if (port < 0 || port > 65535) {
+        errx(EXIT_FAILURE, "invalid port: %s", optarg);
       }
       addr.sin_port = htons(port);
       break;
     default:
       usage(argv[0]);
-      exit(2);
     }
 
   if (optind == argc) {
     usage(argv[0]);
-    exit(2);
   }
 
   int sock = socket(AF_INET, SOCK_DGRAM, 0);
   if (sock < 0) {
-    perror("failed to create socket");
-    exit(EXIT_FAILURE);
+    err(EXIT_FAILURE, "failed to create socket");
   }
   int broadcast = 1;
   if (setsockopt(sock, SOL_SOCKET, SO_BROADCAST, &broadcast,
                  sizeof(broadcast))) {
-    perror("failed to set broadcast option");
-    exit(EXIT_FAILURE);
+    err(EXIT_FAILURE, "failed to set broadcast option");
   }
   if (connect(sock, (struct sockaddr *)&addr, sizeof(addr))) {
-    perror("setting default socket destination failed");
-    exit(EXIT_FAILURE);
+    err(EXIT_FAILURE, "setting default socket destination failed");
   }
 
   for (int i = optind; i < argc; i++) {
     int err = is_valid_mac(argv[i]);
-    if (err != 0) {
-      fprintf(stderr, "invalid MAC address: %s: %s\n", argv[i],
-              get_regerror(err, &VALID_MAC_RE));
+    if (err) {
+      warnx("\"%s\" is not valid MAC address: %s", argv[i],
+            get_regerror(err, &VALID_MAC_RE));
       continue;
     }
 
     int n = send_magic_packet(sock, argv[i]);
     if (n < 0) {
-      perror("failed to send magic packet");
-      exit(EXIT_FAILURE);
+      errx(EXIT_FAILURE, "failed to send magic packet");
     }
     if (n != MAGIC_PACKET_LEN) {
-      fprintf(stderr, "sent %d of %d bytes\n", n, MAGIC_PACKET_LEN);
-      exit(EXIT_FAILURE);
+      errx(EXIT_FAILURE, "sent %d of %d bytes", n, MAGIC_PACKET_LEN);
     }
   }
   close(sock);
