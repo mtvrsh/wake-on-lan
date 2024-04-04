@@ -7,9 +7,10 @@ from python import wol
 
 BINS = [
     "c/build/wol",
-    "rust/target/debug/wol",
     "go-wol/go-wol",
     "python/wol.py",
+    "rust/target/debug/wol",
+    "sh/wol.sh"
 ]
 
 ADDRS = ["255.255.255.255", "192.168.0.255"]
