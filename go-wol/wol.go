@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"log"
 	"net"
 	"os"
 	"path/filepath"
@@ -13,6 +14,7 @@ import (
 const packetLen = 102
 
 func main() {
+	log.SetFlags(log.Lshortfile)
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: %s [OPTIONS] MAC...\n", filepath.Base(os.Args[0]))
 		flag.PrintDefaults()
@@ -29,29 +31,26 @@ func main() {
 	addr := net.JoinHostPort(*address, *port)
 	conn, err := net.DialTimeout("udp", addr, time.Second*5)
 	if err != nil {
-		printErr(err)
-		os.Exit(1)
+		log.Fatal(err)
 	}
 
 	for _, arg := range flag.Args() {
 		mac, err := net.ParseMAC(arg)
 		if err != nil {
-			printErr(err)
+			log.Print(err)
 			continue
 		}
 		n, err := sendMagic(conn, mac)
 		if err != nil {
-			printErr(err)
-			os.Exit(1)
+			log.Fatal(err)
 		}
 		if n != packetLen {
-			printErr(fmt.Errorf("sent %v of %v bytes", n, packetLen))
-			os.Exit(1)
+			log.Fatalf("sent %v of %v bytes", n, packetLen)
 		}
 	}
 
 	if err := conn.Close(); err != nil {
-		printErr(err)
+		log.Print(err)
 	}
 }
 
@@ -68,8 +67,4 @@ func sendMagic(dest io.Writer, mac net.HardwareAddr) (int, error) {
 		packet = append(packet, mac...)
 	}
 	return dest.Write(packet)
-}
-
-func printErr(err error) {
-	fmt.Fprintf(os.Stderr, "error: %v\n", err)
 }
