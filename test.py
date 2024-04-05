@@ -3,6 +3,7 @@ import argparse
 import socket
 import subprocess
 import threading
+
 from python import wol
 
 BINS = [
@@ -10,11 +11,11 @@ BINS = [
     "go-wol/go-wol",
     "python/wol.py",
     "rust/target/debug/wol",
-    "sh/wol.sh"
+    "sh/wol.sh",
 ]
 
 ADDRS = ["255.255.255.255", "192.168.0.255"]
-PORTS = [7, 40000]
+PORTS = [2137, 40000]
 
 MAC = "12:34:56:78:9A:bc"
 
@@ -51,7 +52,7 @@ def test_packet(bin: str, port: int, addr: str, mac: str):
             eprint(f"bad packet length: {len(resp)}")
             failed = True
 
-        wol_packet = wol.magic_from(MAC)
+        wol_packet = wol.magic_from(mac)
         if resp != wol_packet:
             eprint("packet does not match expected")
             diff1 = [b for b in resp if b not in wol_packet]
@@ -73,7 +74,7 @@ def test_packet(bin: str, port: int, addr: str, mac: str):
 
 def run_bin(bin: str, port: int, addr: str, mac: str):
     try:
-        subprocess.run([bin, "-p", str(port), "-i", addr, mac])
+        subprocess.run([bin, "-p", str(port), "-i", addr, mac], check=True)
     except FileNotFoundError:
         eprint(f"File {bin} not found")
 

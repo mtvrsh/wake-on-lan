@@ -5,7 +5,11 @@ import socket
 _packet_len = 102
 
 
-def send_magic(mac_address: str, addr="255.255.255.255", port=9):
+def send_magic(
+    mac_address: str,
+    addr: str = "255.255.255.255",
+    port: int = 9,
+) -> None:
     WakeOnLan(addr, port).send_magic(mac_address)
 
 
@@ -29,7 +33,7 @@ class WakeOnLan:
         self._socket.settimeout(5)
         self._socket.connect((addr, port))
 
-    def send_magic(self, mac_address: str):
+    def send_magic(self, mac_address: str) -> None:
         n = self._socket.send(magic_from(mac_address))
         if n != _packet_len:
             raise RuntimeError("sent only part of magic packet")
@@ -40,7 +44,7 @@ if __name__ == "__main__":
     import sys
 
     parser = argparse.ArgumentParser(
-        description="Wake up devices with magic packet."
+        description="Wake up devices with magic packet.",
     )
     parser.add_argument(
         "-i",
