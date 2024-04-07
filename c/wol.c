@@ -34,7 +34,7 @@ int is_valid_mac(char *mac) { return regexec(&VALID_MAC_RE, mac, 0, NULL, 0); }
 
 // assumes mac is valid, see is_valid_mac()
 unsigned char *hex_mac_to_bytes(char *mac) {
-  unsigned char *bytes = malloc(6 * sizeof(char));
+  unsigned char *bytes = malloc(6);
   char tmp[3]; // we need only 2 but strtol expects null terminated char*
   tmp[2] = '\0';
 
@@ -54,13 +54,13 @@ unsigned char *hex_mac_to_bytes(char *mac) {
 
 int send_magic_packet(int sock, char *mac_hex) {
   static unsigned char magic_packet[MAGIC_PACKET_LEN];
-  memset(&magic_packet, 0xff, 6 * sizeof(unsigned char));
+  memset(&magic_packet, 0xff, 6);
 
   unsigned char *mac_bytes = hex_mac_to_bytes(mac_hex);
 
   unsigned char *tmp = magic_packet;
   for (unsigned int i = 0; i < 16; i++) {
-    tmp = tmp + 6 * sizeof(unsigned char);
+    tmp = tmp + 6;
     memcpy(tmp, mac_bytes, 6);
   }
   free(mac_bytes);
