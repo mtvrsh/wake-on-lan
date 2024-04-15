@@ -9,6 +9,7 @@ from python import wol
 BINS = [
     "c/build/wol",
     "go-wol/go-wol",
+    "js/wol.js",
     "python/wol.py",
     "rust/target/debug/wol",
     "sh/wol.sh",
