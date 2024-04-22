@@ -56,13 +56,14 @@ def test_packet(bin: str, port: int, addr: str, mac: str):
         wol_packet = wol.magic_from(mac)
         if resp != wol_packet:
             eprint("packet does not match expected")
-            diff1 = [b for b in resp if b not in wol_packet]
-            diff2 = [b for b in wol_packet if b not in resp]
-            eprint("Got:")
-            eprint([f"{b:#x}" for b in diff1])
-            eprint("Want:")
-            eprint([f"{b:#x}" for b in diff2])
             failed = True
+            if len(resp) > len(wol_packet):
+                eprint(f"too short: {len(wol_packet)}")
+                return
+            elif len(resp) < len(wol_packet):
+                eprint(f"too long: {len(wol_packet)}")
+                return
+            diff_packets(wol_packet, resp)
     except TimeoutError:
         eprint("Timed out waiting for packet")
         failed = True
@@ -80,7 +81,27 @@ def run_bin(bin: str, port: int, addr: str, mac: str):
         eprint(f"File {bin} not found")
 
 
-def eprint(s: str):
+def diff_packets(packetA, packetB):
+    diff1 = []
+    diff2 = []
+    for i, byte in enumerate(packetA):
+        if byte != packetB[i]:
+            diff1.append((i, packetA[i]))
+            diff2.append((i, packetB[i]))
+
+    def hexprint(diff):
+        for i, b in diff:
+            if verbose:
+                print(f"{i}:{b:#x}", sep="", end=" ")
+        eprint()
+
+    eprint("Want:")
+    hexprint(diff1)
+    eprint("Got:")
+    hexprint(diff2)
+
+
+def eprint(s: str = ""):
     if verbose:
         print(s)
 
