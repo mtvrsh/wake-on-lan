@@ -19,6 +19,7 @@ enum_glob_use = "deny"
 nursery = "deny"
 pedantic = "deny"
 unwrap_used = "deny"
+expect_used = "deny"
 
 [dependencies]
 clap = { version = "4.5", features = ["derive"] }
