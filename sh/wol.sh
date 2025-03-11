@@ -20,7 +20,7 @@ make_magic() {
 }
 
 send_magic() {
-	if echo "$1" | grep -E "^([0-9a-fA-F]{2}[:-]?){5}[0-9a-fA-F]{2}$" > /dev/null; then
+	if echo "$1" | grep -qE "^([0-9a-fA-F]{2}[:-]?){5}[0-9a-fA-F]{2}$"; then
 		pkt=mktemp
 		make_magic "$pkt" "$1"
 		nc -b -u -q1 "$addr" "$port" < "$pkt"

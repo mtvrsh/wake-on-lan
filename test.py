@@ -2,6 +2,7 @@
 import argparse
 import socket
 import subprocess
+import sys
 import threading
 
 from python import wol
@@ -26,14 +27,11 @@ def test(bin: str):
     for addr in ADDRS:
         for port in PORTS:
             eprint(f"executing: {bin} -p {port} -i {addr} {MAC}")
-            try:
-                a = (bin, port, addr, MAC)
-                server = threading.Thread(target=test_packet, args=a)
-                wol_bin = threading.Thread(target=run_bin, args=a)
-                server.start()
-                wol_bin.start()
-            except FileNotFoundError:
-                eprint(f"File {bin} not found")
+            a = (bin, port, addr, MAC)
+            server = threading.Thread(target=test_packet, args=a)
+            wol_bin = threading.Thread(target=run_bin, args=a)
+            server.start()
+            wol_bin.start()
             wol_bin.join(5)
             server.join(5)
 
@@ -55,14 +53,12 @@ def test_packet(bin: str, port: int, addr: str, mac: str):
 
         wol_packet = wol.magic_from(mac)
         if resp != wol_packet:
-            eprint("packet does not match expected")
             failed = True
+            eprint("packet does not match expected")
             if len(resp) > len(wol_packet):
-                eprint(f"too short: {len(wol_packet)}")
-                return
-            elif len(resp) < len(wol_packet):
-                eprint(f"too long: {len(wol_packet)}")
-                return
+                eprint(f"too long: {len(resp)}")
+            else:
+                eprint(f"too short: {len(resp)}")
             diff_packets(wol_packet, resp)
     except TimeoutError:
         eprint("Timed out waiting for packet")
@@ -79,15 +75,17 @@ def run_bin(bin: str, port: int, addr: str, mac: str):
         subprocess.run([bin, "-p", str(port), "-i", addr, mac], check=True)
     except FileNotFoundError:
         eprint(f"File {bin} not found")
+    except subprocess.CalledProcessError as e:
+        eprint(f"{bin}: returned code {e.returncode}")
 
 
-def diff_packets(packetA, packetB):
+def diff_packets(packet_a, packet_b):
     diff1 = []
     diff2 = []
-    for i, byte in enumerate(packetA):
-        if byte != packetB[i]:
-            diff1.append((i, packetA[i]))
-            diff2.append((i, packetB[i]))
+    for i, byte in enumerate(packet_a[: min(len(packet_a), len(packet_b))]):
+        if byte != packet_b[i]:
+            diff1.append((i, packet_a[i]))
+            diff2.append((i, packet_b[i]))
 
     def hexprint(diff):
         for i, b in diff:
@@ -103,7 +101,7 @@ def diff_packets(packetA, packetB):
 
 def eprint(s: str = ""):
     if verbose:
-        print(s)
+        print(s, file=sys.stderr)
 
 
 if __name__ == "__main__":
@@ -117,3 +115,4 @@ if __name__ == "__main__":
 
     for b in args.binary:
         test(b)
+        eprint()

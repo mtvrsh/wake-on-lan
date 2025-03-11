@@ -1,6 +1,6 @@
 [package]
 name = "wol"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 license = "GPL-3.0"
 authors = ["Hubert Piechota <mtvrs@tuta.io>"]
@@ -22,5 +22,5 @@ unwrap_used = "deny"
 expect_used = "deny"
 
 [dependencies]
-clap = { version = "4.5", features = ["derive"] }
-macaddr = "1"
+clap = { version = "4.5.32", features = ["derive"] }
+macaddr = "1.0.1"

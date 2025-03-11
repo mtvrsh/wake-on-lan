@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-const dgram = require('node:dgram');
-const { argv } = require('node:process');
+const dgram = require("node:dgram");
+const { argv } = require("node:process");
 
 function usage() {
   console.log("Usage: wol.js [OPTIONS] MAC...");
@@ -15,27 +15,27 @@ function parse_args() {
   var args = {
     port: 9,
     addr: "255.255.255.255",
-    macs: []
-  }
+    macs: [],
+  };
 
   for (var i = 2; i < argv.length; i++) {
     switch (argv[i]) {
-      case '--help':
-      case '-h':
+      case "--help":
+      case "-h":
         usage();
-      case '--ipaddr':
-      case '-i':
+      case "--ipaddr":
+      case "-i":
         if (!argv[i + 1]) {
-          console.error('value is required for "%s"', argv[i]);
+          console.error("value is required for \"%s\"", argv[i]);
           process.exit(1);
         }
         args.addr = argv[i + 1];
         i++;
         break;
-      case '--port':
-      case '-p':
+      case "--port":
+      case "-p":
         if (!argv[i + 1]) {
-          console.error('value is required for "%s"', argv[i]);
+          console.error("value is required for \"%s\"", argv[i]);
           process.exit(1);
         }
         args.port = argv[i + 1];
@@ -55,7 +55,7 @@ function parse_args() {
 
 function main() {
   var args = parse_args();
-  const socket = dgram.createSocket('udp4');
+  const socket = dgram.createSocket("udp4");
   socket.bind(0, () => {
     socket.setBroadcast(true);
   });
@@ -63,7 +63,7 @@ function main() {
   for (var mac of args.macs) {
     var bmac = parse_mac(mac);
     if (!bmac) {
-      console.error('"%s" is not valid mac address', mac);
+      console.error("\"%s\" is not valid mac address", mac);
       continue;
     }
     var magic_pkt = make_magic(bmac);

@@ -20,9 +20,7 @@ def magic_from(mac_address: str) -> bytes:
 
 def is_valid_mac(mac: str) -> bool:
     return bool(
-        re.match(
-            r"[0-9a-f]{2}([:-]?)[0-9a-f]{2}(\1[0-9a-f]{2}){4}$", mac.lower()
-        )
+        re.match(r"[0-9a-f]{2}([:-]?)[0-9a-f]{2}(\1[0-9a-f]{2}){4}$", mac.lower())
     )
 
 

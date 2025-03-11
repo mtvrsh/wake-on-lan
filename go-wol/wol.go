@@ -8,6 +8,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"slices"
 	"time"
 )
 
@@ -59,12 +60,8 @@ func sendMagic(dest io.Writer, mac net.HardwareAddr) (int, error) {
 	if len(mac) != 6 {
 		return 0, fmt.Errorf("unsupported MAC address format")
 	}
-	packet := make([]byte, 6, packetLen)
-	for i := 0; i < 6; i++ {
-		packet[i] = 0xff
-	}
-	for i := 0; i < 16; i++ {
-		packet = append(packet, mac...)
-	}
-	return dest.Write(packet)
+	header := slices.Repeat([]byte{0xff}, 6)
+	packet := slices.Repeat(mac, 16)
+	header = append(header, packet...)
+	return dest.Write(header)
 }

@@ -26,6 +26,9 @@ void usage(char *prog) {
 char *get_regerror(int errcode, regex_t *compiled) {
   size_t length = regerror(errcode, compiled, NULL, 0);
   char *buffer = malloc(length);
+  if (buffer == NULL) {
+    err(EXIT_FAILURE, "failed to allocate memory");
+  }
   (void)regerror(errcode, compiled, buffer, length);
   return buffer;
 }
@@ -35,7 +38,10 @@ int is_valid_mac(char *mac) { return regexec(&VALID_MAC_RE, mac, 0, NULL, 0); }
 // assumes mac is valid, see is_valid_mac()
 unsigned char *hex_mac_to_bytes(char *mac) {
   unsigned char *bytes = malloc(6);
-  char tmp[3]; // we need only 2 but strtol expects null terminated char*
+  if (bytes == NULL) {
+    err(EXIT_FAILURE, "failed to allocate memory");
+  }
+  char tmp[3]; // strtol expects null terminated char*
   tmp[2] = '\0';
 
   for (int i = 0, bindex = 0; bindex < 6;) {
