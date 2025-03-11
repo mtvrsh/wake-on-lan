@@ -1,25 +1,27 @@
-use clap::Parser;
-use macaddr::MacAddr6;
 use std::{net::UdpSocket, process::ExitCode, time::Duration};
 
-#[derive(Parser)]
-#[command(about, version)]
-struct Cli {
-    /// Broadcast address
-    #[arg(short, long, value_name = "ADDR", default_value = "255.255.255.255")]
-    ipaddr: String,
+use argh::FromArgs;
+use macaddr::MacAddr6;
 
-    /// Destination port number
-    #[arg(short, long, value_name = "NUM", default_value = "9")]
+/// Cross platform wake on lan client.
+#[derive(FromArgs, Debug)]
+#[argh(help_triggers("-h", "--help"))]
+struct Cli {
+    /// broadcast address
+    #[argh(option, short = 'i', default = "String::from(\"255.255.255.255\")")]
+    addr: String,
+
+    /// destination port
+    #[argh(option, short = 'p', default = "40000")]
     port: u16,
 
-    /// MAC address
-    #[arg(required = true)]
+    /// MAC addresses
+    #[argh(positional, greedy)]
     mac: Vec<String>,
 }
 
 fn main() -> ExitCode {
-    let args = Cli::parse();
+    let args: Cli = argh::from_env();
 
     let socket = match UdpSocket::bind("0.0.0.0:0") {
         Ok(s) => s,
@@ -33,16 +35,26 @@ fn main() -> ExitCode {
         eprintln!("error: failed to set SO_BROADCAST: {e}");
         return ExitCode::FAILURE;
     }
-    if let Err(e) = socket.connect(format!("{}:{}", args.ipaddr, args.port)) {
+    if let Err(e) = socket.connect(format!("{}:{}", args.addr, args.port)) {
         eprintln!(
             "error: failed to connect socket to \"{}:{}\": {e}",
-            args.ipaddr, args.port
+            args.addr, args.port
         );
         return ExitCode::FAILURE;
     }
 
+    if args.mac.is_empty() {
+        let cmd: Vec<String> = std::env::args().collect();
+        let cmd = std::path::Path::new(&cmd[0])
+            .file_name()
+            .and_then(|s| s.to_str())
+            .unwrap_or(cmd[0].as_str());
+        eprintln!("error: too few arguments, try `{cmd} --help`");
+        return ExitCode::FAILURE;
+    }
+
     for mac in args.mac {
-        let m: MacAddr6 = match mac.parse() {
+        let m = match mac.parse::<MacAddr6>() {
             Ok(m) => m,
             Err(e) => {
                 eprintln!("error: \"{mac}\" is not valid MAC address: {e}");

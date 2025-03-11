@@ -22,5 +22,5 @@ unwrap_used = "deny"
 expect_used = "deny"
 
 [dependencies]
-clap = { version = "4.5.32", features = ["derive"] }
+argh = "0.1.13"
 macaddr = "1.0.1"
