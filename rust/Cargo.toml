@@ -2,7 +2,7 @@
 name = "wol"
 version = "0.2.0"
 edition = "2021"
-license = "GPL-3.0"
+license = "GPL-3.0-or-later"
 authors = ["Hubert Piechota <mtvrs@tuta.io>"]
 description = "Cross platform wake on lan client."
 

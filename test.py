@@ -14,6 +14,7 @@ BINS = [
     "python/wol.py",
     "rust/target/debug/wol",
     "sh/wol.sh",
+    "perl/wol.pl",
 ]
 
 ADDRS = ["255.255.255.255", "192.168.0.255"]
@@ -115,4 +116,4 @@ if __name__ == "__main__":
 
     for b in args.binary:
         test(b)
-        eprint()
+        print()
